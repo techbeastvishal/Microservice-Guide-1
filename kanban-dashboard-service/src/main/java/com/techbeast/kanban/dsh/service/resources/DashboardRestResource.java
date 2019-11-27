@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.techbeast.kanban.dsh.service.exception.EmployeeNotFoundException;
 import com.techbeast.kanban.dsh.service.models.Employee;
 
 @RestController
@@ -22,16 +23,14 @@ public class DashboardRestResource {
 	@RequestMapping("/{empId}")
 	public List<Object> getDashboardData(@PathVariable long empId){
 		Employee employee = restTemplate.getForObject("http://localhost:8082/employee/api/"+empId, Employee.class);
-		System.out.println("Employee..."+employee.getEmpId());
-		try {
-			//TaskList response = restTemplate.getForObject("http://localhost:8083/kanban/api/"+empId, TaskList.class);
+		
+		if(employee.getEmpName().isEmpty())
+			throw new EmployeeNotFoundException("Employee which is not present in Db Id is-:"+empId);
+			
 			ResponseEntity<Object[]> response = restTemplate.getForEntity("http://localhost:8083/kanban/api/"+empId, Object[].class);
-			System.out.println("TaskList-:"+response.toString());
+			
+			System.out.println("-->"+response.getStatusCode().toString());
+			
 			return Arrays.asList(response.getBody());
-		}catch (Exception e) {
-			System.out.println("Error Occured--"+e);
-		}
-		return null;
-
 	}
 }
